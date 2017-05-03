@@ -110,7 +110,7 @@ const severityChar = "ISWEF"
 
 var severityName = []string{
 	infoLog:    "INFO",
-	statLog:    "STAT",
+	statLog:    "stat",
 	warningLog: "WARNING",
 	errorLog:   "ERROR",
 	fatalLog:   "FATAL",
