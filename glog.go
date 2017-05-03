@@ -99,16 +99,18 @@ type severity int32 // sync/atomic int32
 // lower-severity log file.
 const (
 	infoLog severity = iota
+	statLog          //for stats
 	warningLog
 	errorLog
 	fatalLog
-	numSeverity = 4
+	numSeverity = 5
 )
 
-const severityChar = "IWEF"
+const severityChar = "ISWEF"
 
 var severityName = []string{
 	infoLog:    "INFO",
+	statLog:    "STAT",
 	warningLog: "WARNING",
 	errorLog:   "ERROR",
 	fatalLog:   "FATAL",
@@ -534,6 +536,7 @@ where the fields are defined as follows:
 */
 func (l *loggingT) header(s severity, depth int) (*buffer, string, int) {
 	_, file, line, ok := runtime.Caller(3 + depth)
+
 	if !ok {
 		file = "???"
 		line = 1
@@ -639,6 +642,9 @@ func (l *loggingT) print(s severity, args ...interface{}) {
 
 func (l *loggingT) printDepth(s severity, depth int, args ...interface{}) {
 	buf, file, line := l.header(s, depth)
+
+	fmt.Println("printDepth", string(buf.Bytes()))
+
 	fmt.Fprint(buf, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
@@ -703,6 +709,8 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 			fallthrough
 		case infoLog:
 			l.file[infoLog].Write(data)
+		case statLog:
+			l.file[statLog].Write(data)
 		}
 	}
 	if s == fatalLog {
@@ -1177,4 +1185,28 @@ func Exitln(args ...interface{}) {
 func Exitf(format string, args ...interface{}) {
 	atomic.StoreUint32(&fatalNoStacks, 1)
 	logging.printf(fatalLog, format, args...)
+}
+
+// Stat logs to the Stat log.
+// Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
+func Stat(args ...interface{}) {
+	logging.print(statLog, args...)
+}
+
+// StatDepth acts as Info but uses depth to determine which call frame to log.
+// StatDepth(0, "msg") is the same as Info("msg").
+func StatDepth(depth int, args ...interface{}) {
+	logging.printDepth(statLog, depth, args...)
+}
+
+// Statln logs to the INFO log.
+// Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
+func Statln(args ...interface{}) {
+	logging.println(statLog, args...)
+}
+
+// Statf logs to the INFO log.
+// Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
+func Statf(format string, args ...interface{}) {
+	logging.printf(statLog, format, args...)
 }

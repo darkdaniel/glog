@@ -413,3 +413,12 @@ func BenchmarkHeader(b *testing.B) {
 		logging.putBuffer(buf)
 	}
 }
+
+func TestStat(t *testing.T) {
+	fmt.Println("test for TestStat")
+	Stat("hello world1")
+	Stat("hello world2")
+	Stat("hello world3")
+	Stat("hello world4")
+	Flush()
+}
